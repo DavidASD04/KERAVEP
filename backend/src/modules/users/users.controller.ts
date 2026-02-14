@@ -32,6 +32,13 @@ export class UsersController {
     });
   }
 
+  @Get('sellers/assignments')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Vendedores con zonas y almacenes asignados' })
+  getSellersWithAssignments() {
+    return this.usersService.getSellersWithAssignments();
+  }
+
   @Get(':id')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Obtener usuario por ID' })
@@ -51,5 +58,24 @@ export class UsersController {
   @ApiOperation({ summary: 'Activar/Desactivar usuario' })
   toggleActive(@Param('id') id: string) {
     return this.usersService.toggleActive(id);
+  }
+
+  @Patch(':id/zone')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Asignar zona/ruta al vendedor' })
+  updateZone(@Param('id') id: string, @Body('zone') zone: string) {
+    return this.usersService.updateSellerZone(id, zone);
+  }
+
+  @Get(':id/mobile-inventory')
+  @ApiOperation({ summary: 'Inventario móvil del vendedor' })
+  getMobileInventory(@Param('id') id: string) {
+    return this.usersService.getSellerMobileInventory(id);
+  }
+
+  @Get(':id/products-summary')
+  @ApiOperation({ summary: 'Productos vendidos por el vendedor (últimos 30 días)' })
+  getProductsSummary(@Param('id') id: string) {
+    return this.usersService.getSellerProductsSummary(id);
   }
 }

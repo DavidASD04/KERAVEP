@@ -169,7 +169,7 @@ export const accountsApi = {
   getAgingReport: (token: string) =>
     fetchApi<AgingReport>('/accounts-receivable/aging-report', { token }),
   getCustomerStatement: (token: string, customerId: string) =>
-    fetchApi<CustomerStatement>(`/accounts-receivable/statement/${customerId}`, { token }),
+    fetchApi<CustomerStatement>(`/accounts-receivable/customer/${customerId}/statement`, { token }),
 };
 
 // Users
@@ -182,6 +182,26 @@ export const usersApi = {
     fetchApi<User>(`/users/${id}`, { token }),
   toggleActive: (token: string, id: string) =>
     fetchApi<User>(`/users/${id}/toggle-active`, { method: 'PATCH', token }),
+  updateZone: (token: string, id: string, zone: string) =>
+    fetchApi<User>(`/users/${id}/zone`, { method: 'PATCH', body: JSON.stringify({ zone }), token }),
+  getSellersWithAssignments: (token: string) =>
+    fetchApi<SellerWithAssignment[]>('/users/sellers/assignments', { token }),
+  getMobileInventory: (token: string, id: string) =>
+    fetchApi<MobileInventory>(`/users/${id}/mobile-inventory`, { token }),
+  getProductsSummary: (token: string, id: string) =>
+    fetchApi<SellerProductSummary[]>(`/users/${id}/products-summary`, { token }),
+};
+
+// Cash Closings
+export const cashClosingsApi = {
+  getAll: (token: string, params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchApi<PaginatedResponse<CashClosing>>(`/cash-closings${qs}`, { token });
+  },
+  getById: (token: string, id: string) =>
+    fetchApi<CashClosingDetail>(`/cash-closings/${id}`, { token }),
+  create: (token: string, data: { warehouseId: string; date: string; notes?: string }) =>
+    fetchApi<CashClosing>('/cash-closings', { method: 'POST', body: JSON.stringify(data), token }),
 };
 
 // Types
@@ -192,6 +212,7 @@ export interface User {
   lastName: string;
   role: 'ADMIN' | 'VENDEDOR' | 'ALMACENERO';
   phone?: string;
+  zone?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -265,10 +286,13 @@ export interface Warehouse {
 export interface StockItem {
   productId: string;
   productName: string;
-  sku: string;
+  productSku: string;
   quantity: number;
   minStock: number;
-  unit: string;
+  productUnit?: string;
+  productPrice?: string;
+  sku?: string;
+  unit?: string;
 }
 
 export interface StockMovement {
@@ -407,4 +431,49 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface SellerWithAssignment extends User {
+  mobileWarehouse: { id: string; name: string; type: string } | null;
+}
+
+export interface MobileInventory {
+  warehouse: { id: string; name: string; type: string } | null;
+  stock: StockItem[];
+  message?: string;
+}
+
+export interface SellerProductSummary {
+  productId: string;
+  productName: string;
+  productSku: string;
+  totalQuantitySold: string;
+  totalRevenue: string;
+  lastSaleDate: string;
+}
+
+export interface CashClosing {
+  id: string;
+  warehouseId: string;
+  warehouseName: string;
+  userId: string;
+  userName: string;
+  date: string;
+  totalCash: string;
+  totalCredit: string;
+  totalSales: string;
+  totalCollections: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CashClosingDetail extends CashClosing {
+  sales: {
+    id: string;
+    saleNumber: string;
+    type: string;
+    total: string;
+    customerName: string;
+    createdAt: string;
+  }[];
 }

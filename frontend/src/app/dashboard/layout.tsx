@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
 
 const navigation = [
@@ -26,6 +27,7 @@ const navigation = [
   { name: 'Productos', href: '/dashboard/productos', icon: Package },
   { name: 'Cuentas por Cobrar', href: '/dashboard/cuentas', icon: CreditCard },
   { name: 'Vendedores', href: '/dashboard/vendedores', icon: TrendingUp },
+  { name: 'Cierre de Caja', href: '/dashboard/cierres', icon: Lock },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

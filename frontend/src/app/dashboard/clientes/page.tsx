@@ -27,6 +27,7 @@ export default function ClientesPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -47,6 +48,7 @@ export default function ClientesPage() {
     try {
       const params: Record<string, string> = { page: String(page), limit: '15' };
       if (search) params.search = search;
+      if (activeFilter) params.active = activeFilter;
       const res = await customersApi.getAll(token, params);
       setCustomers(res.data);
       setTotal(res.total);
@@ -54,7 +56,7 @@ export default function ClientesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { loadCustomers(); }, [token, page, search]);
+  useEffect(() => { loadCustomers(); }, [token, page, search, activeFilter]);
 
   const openNewCustomer = () => {
     setEditingCustomer(null);
@@ -128,17 +130,28 @@ export default function ClientesPage() {
         </button>
       </div>
 
-      {/* Search */}
+      {/* Search & Filters */}
       <div className="glass-card p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre, email, teléfono..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
-            className="input-field pl-9"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre, email, teléfono..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              className="input-field pl-9"
+            />
+          </div>
+          <select
+            value={activeFilter}
+            onChange={e => { setActiveFilter(e.target.value); setPage(1); }}
+            className="input-field w-44"
+          >
+            <option value="">Todos</option>
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+          </select>
         </div>
       </div>
 

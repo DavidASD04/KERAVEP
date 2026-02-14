@@ -42,6 +42,7 @@ export class SalesController {
   @ApiQuery({ name: 'type', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({ name: 'customerId', required: false })
   @ApiQuery({ name: 'from', required: false })
   @ApiQuery({ name: 'to', required: false })
   findAll(
@@ -50,13 +51,14 @@ export class SalesController {
     @Query('type') type?: string,
     @Query('status') status?: string,
     @Query('userId') userId?: string,
+    @Query('customerId') customerId?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
     return this.service.findAll({
       page: page ? parseInt(page) : undefined,
       limit: limit ? parseInt(limit) : undefined,
-      type, status, userId, from, to,
+      type, status, userId, customerId, from, to,
     });
   }
 

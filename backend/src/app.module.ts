@@ -9,6 +9,7 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { AccountsReceivableModule } from './modules/accounts-receivable/accounts-receivable.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { CashClosingsModule } from './modules/cash-closings/cash-closings.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     SalesModule,
     AccountsReceivableModule,
     DashboardModule,
+    CashClosingsModule,
   ],
 })
 export class AppModule {}

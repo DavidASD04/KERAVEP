@@ -31,6 +31,7 @@ export const users = pgTable('users', {
   role: userRoleEnum('role').notNull().default('VENDEDOR'),
   isActive: boolean('is_active').notNull().default(true),
   phone: varchar('phone', { length: 20 }),
+  zone: varchar('zone', { length: 200 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

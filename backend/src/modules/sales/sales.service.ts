@@ -140,7 +140,7 @@ export class SalesService {
     return { ...sale, items: saleItemsData };
   }
 
-  async findAll(query?: { page?: number; limit?: number; type?: string; status?: string; userId?: string; from?: string; to?: string }) {
+  async findAll(query?: { page?: number; limit?: number; type?: string; status?: string; userId?: string; customerId?: string; from?: string; to?: string }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
     const offset = (page - 1) * limit;
@@ -149,6 +149,7 @@ export class SalesService {
     if (query?.type) conditions.push(eq(schema.sales.type, query.type as any));
     if (query?.status) conditions.push(eq(schema.sales.status, query.status as any));
     if (query?.userId) conditions.push(eq(schema.sales.userId, query.userId));
+    if (query?.customerId) conditions.push(eq(schema.sales.customerId, query.customerId));
     if (query?.from) conditions.push(gte(schema.sales.createdAt, new Date(query.from)));
     if (query?.to) conditions.push(lte(schema.sales.createdAt, new Date(query.to)));
 

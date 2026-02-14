@@ -111,7 +111,7 @@ export default function AlmacenPage() {
   const filteredStock = stock.filter(s =>
     !searchStock ||
     s.productName.toLowerCase().includes(searchStock.toLowerCase()) ||
-    s.sku.toLowerCase().includes(searchStock.toLowerCase())
+    (s.productSku || s.sku || '').toLowerCase().includes(searchStock.toLowerCase())
   );
 
   const totalUnits = stock.reduce((sum, s) => sum + s.quantity, 0);
