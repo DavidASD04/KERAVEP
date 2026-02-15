@@ -419,10 +419,10 @@ export interface LowStockAlert {
 }
 
 export interface SellerPerformance {
-  sellerId: string;
+  userId: string;
   sellerName: string;
   totalSales: number;
-  totalAmount: string;
+  totalRevenue: string;
 }
 
 export interface PaginatedResponse<T> {

@@ -173,7 +173,7 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {sellerPerf.map((seller, i) => (
-                  <div key={seller.sellerId} className="flex items-center gap-3">
+                  <div key={seller.userId || i} className="flex items-center gap-3">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${i === 0 ? 'bg-amber-400' : i === 1 ? 'bg-gray-400' : 'bg-amber-600'}`}>
                       {i + 1}
                     </div>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium text-gray-900 truncate">{seller.sellerName}</p>
                       <p className="text-xs text-gray-400">{seller.totalSales} ventas</p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(seller.totalAmount)}</p>
+                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(seller.totalRevenue)}</p>
                   </div>
                 ))}
               </div>
