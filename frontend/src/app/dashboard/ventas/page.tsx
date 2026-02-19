@@ -28,6 +28,8 @@ import {
   Receipt,
   User,
   MapPin,
+  UserPlus,
+  Check,
 } from 'lucide-react';
 
 interface CartItem {
@@ -56,6 +58,12 @@ export default function VentasPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [stockMap, setStockMap] = useState<Record<string, number>>({});
   const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [selectedCustomerName, setSelectedCustomerName] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState({ firstName: '', lastName: '', phone: '', email: '', address: '', creditLimit: '5000' });
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [saleType, setSaleType] = useState<'CONTADO' | 'CREDITO'>('CONTADO');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -188,6 +196,8 @@ export default function VentasPage() {
       setShowNewSale(false);
       setCart([]);
       setSelectedCustomer('');
+      setSelectedCustomerName('');
+      setCustomerSearch('');
       setSaleType('CONTADO');
       loadSales();
     } catch (err: unknown) {
@@ -224,6 +234,66 @@ export default function VentasPage() {
   const filteredProducts = products.filter(p =>
     !searchProduct || p.name.toLowerCase().includes(searchProduct.toLowerCase()) || p.sku.toLowerCase().includes(searchProduct.toLowerCase())
   );
+
+  const filteredCustomers = customers.filter(c => {
+    if (!customerSearch.trim()) return true;
+    const q = customerSearch.toLowerCase();
+    const full = `${c.firstName} ${c.lastName}`.toLowerCase();
+    return full.includes(q) || (c.phone || '').includes(q) || (c.email || '').toLowerCase().includes(q);
+  });
+
+  const selectCustomer = (c: Customer) => {
+    setSelectedCustomer(c.id);
+    setSelectedCustomerName(`${c.firstName} ${c.lastName}`);
+    setCustomerSearch(`${c.firstName} ${c.lastName}`);
+    setShowCustomerDropdown(false);
+  };
+
+  const handleCustomerSearchChange = (value: string) => {
+    setCustomerSearch(value);
+    setShowCustomerDropdown(true);
+    // If user edits the text, clear the selection
+    if (selectedCustomerName && value !== selectedCustomerName) {
+      setSelectedCustomer('');
+      setSelectedCustomerName('');
+    }
+  };
+
+  const openCreateCustomer = () => {
+    const parts = customerSearch.trim().split(' ');
+    setNewCustomerData({
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+      phone: '', email: '', address: '', creditLimit: '5000',
+    });
+    setShowCreateCustomer(true);
+    setShowCustomerDropdown(false);
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!token || !newCustomerData.firstName.trim()) {
+      toast.error('El nombre es obligatorio');
+      return;
+    }
+    setCreatingCustomer(true);
+    try {
+      const created = await customersApi.create(token, {
+        firstName: newCustomerData.firstName.trim(),
+        lastName: newCustomerData.lastName.trim(),
+        phone: newCustomerData.phone.trim() || undefined,
+        email: newCustomerData.email.trim() || undefined,
+        address: newCustomerData.address.trim() || undefined,
+        creditLimit: newCustomerData.creditLimit || '5000',
+      });
+      setCustomers(prev => [...prev, created]);
+      selectCustomer(created);
+      setShowCreateCustomer(false);
+      toast.success(`Cliente ${created.firstName} ${created.lastName} creado`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al crear cliente');
+    }
+    setCreatingCustomer(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -373,14 +443,61 @@ export default function VentasPage() {
               <div className="flex-1 p-5 border-b lg:border-b-0 lg:border-r border-[var(--color-border)]">
                 {/* Sale config */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <div>
+                  <div className="relative">
                     <label className="text-xs font-medium text-gray-600 mb-1 block">Cliente *</label>
-                    <select value={selectedCustomer} onChange={e => setSelectedCustomer(e.target.value)} className="input-field text-sm">
-                      <option value="">Seleccionar cliente</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                      <input
+                        type="text"
+                        placeholder="Escribir nombre del cliente..."
+                        value={customerSearch}
+                        onChange={e => handleCustomerSearchChange(e.target.value)}
+                        onFocus={() => setShowCustomerDropdown(true)}
+                        className={`input-field text-sm pl-8 pr-8 ${selectedCustomer ? 'border-emerald-300 bg-emerald-50/50' : ''}`}
+                        autoComplete="off"
+                      />
+                      {selectedCustomer && (
+                        <Check className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" size={14} />
+                      )}
+                    </div>
+                    {/* Dropdown */}
+                    {showCustomerDropdown && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-52 overflow-y-auto">
+                        {filteredCustomers.length > 0 ? (
+                          filteredCustomers.slice(0, 8).map(c => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => selectCustomer(c)}
+                              className={`w-full text-left px-3 py-2.5 hover:bg-primary/5 transition-colors border-b border-gray-50 last:border-0 flex items-center justify-between ${
+                                selectedCustomer === c.id ? 'bg-primary/10' : ''
+                              }`}
+                            >
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{c.firstName} {c.lastName}</p>
+                                <p className="text-[10px] text-gray-400">{c.phone || c.email || 'Sin contacto'}</p>
+                              </div>
+                              {selectedCustomer === c.id && <Check size={14} className="text-primary" />}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-4 text-center text-sm text-gray-400">
+                            No se encontró &quot;{customerSearch}&quot;
+                          </div>
+                        )}
+                        {/* Create new option */}
+                        {customerSearch.trim().length > 0 && (
+                          <button
+                            type="button"
+                            onClick={openCreateCustomer}
+                            className="w-full text-left px-3 py-2.5 bg-primary/5 hover:bg-primary/10 transition-colors flex items-center gap-2 text-primary font-medium text-sm border-t border-gray-100"
+                          >
+                            <UserPlus size={14} />
+                            Crear cliente &quot;{customerSearch.trim()}&quot;
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 mb-1 block">Almacén *</label>
@@ -526,6 +643,122 @@ export default function VentasPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Click-away overlay for customer dropdown */}
+      {showCustomerDropdown && showNewSale && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowCustomerDropdown(false)} />
+      )}
+
+      {/* Create Customer Modal */}
+      {showCreateCustomer && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md glass-card animate-fade-in">
+            <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center">
+                  <UserPlus className="text-white" size={18} />
+                </div>
+                <div>
+                  <h2 className="font-bold text-lg">Nuevo Cliente</h2>
+                  <p className="text-xs text-gray-400">Crear cliente rápido</p>
+                </div>
+              </div>
+              <button onClick={() => setShowCreateCustomer(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Nombre *</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.firstName}
+                    onChange={e => setNewCustomerData(d => ({ ...d, firstName: e.target.value }))}
+                    className="input-field text-sm"
+                    placeholder="Nombre"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Apellido</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.lastName}
+                    onChange={e => setNewCustomerData(d => ({ ...d, lastName: e.target.value }))}
+                    className="input-field text-sm"
+                    placeholder="Apellido"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Teléfono</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.phone}
+                    onChange={e => setNewCustomerData(d => ({ ...d, phone: e.target.value }))}
+                    className="input-field text-sm"
+                    placeholder="809-555-0000"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Email</label>
+                  <input
+                    type="email"
+                    value={newCustomerData.email}
+                    onChange={e => setNewCustomerData(d => ({ ...d, email: e.target.value }))}
+                    className="input-field text-sm"
+                    placeholder="correo@email.com"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Dirección</label>
+                <input
+                  type="text"
+                  value={newCustomerData.address}
+                  onChange={e => setNewCustomerData(d => ({ ...d, address: e.target.value }))}
+                  className="input-field text-sm"
+                  placeholder="Dirección del cliente"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Límite de crédito (RD$)</label>
+                <input
+                  type="number"
+                  value={newCustomerData.creditLimit}
+                  onChange={e => setNewCustomerData(d => ({ ...d, creditLimit: e.target.value }))}
+                  className="input-field text-sm"
+                  placeholder="5000"
+                />
+              </div>
+            </div>
+            <div className="p-5 border-t border-[var(--color-border)] flex justify-end gap-3">
+              <button onClick={() => setShowCreateCustomer(false)} className="btn-secondary text-sm">
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateCustomer}
+                disabled={creatingCustomer || !newCustomerData.firstName.trim()}
+                className="btn-primary text-sm"
+              >
+                {creatingCustomer ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creando...
+                  </div>
+                ) : (
+                  <>
+                    <UserPlus size={14} />
+                    Crear y Seleccionar
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
