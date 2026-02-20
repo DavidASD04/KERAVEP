@@ -7,7 +7,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
 }
@@ -32,7 +32,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    const token = get().token;
+    if (token) {
+      try {
+        await authApi.logout(token);
+      } catch {
+        // continuar con logout local aunque falle la API
+      }
+    }
     localStorage.removeItem('keravep_token');
     set({ user: null, token: null });
   },

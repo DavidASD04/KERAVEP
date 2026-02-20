@@ -24,8 +24,8 @@ export default function LoginPage() {
       <div className="absolute inset-0 gradient-primary opacity-90" />
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-400/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-yellow-300/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-400/5 rounded-full blur-3xl" />
       </div>
 
       {/* Login Card */}
@@ -33,13 +33,11 @@ export default function LoginPage() {
         <div className="glass-card p-8 md:p-10">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary mb-4 shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-[#D4A03C] bg-[#0f0f1a] mb-4 shadow-lg">
+              <span className="text-[#D4A03C] font-bold text-lg tracking-wider">KV</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">KERAVEP</h1>
-            <p className="text-sm text-gray-500 mt-1">Sistema de Gestión Empresarial</p>
+            <h1 className="text-2xl font-bold text-gray-900">KERAVEN</h1>
+            <p className="text-xs text-gray-500 mt-1 tracking-widest uppercase">Profesional</p>
           </div>
 
           {/* Error */}

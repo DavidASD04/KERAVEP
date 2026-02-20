@@ -2,11 +2,15 @@ import { Injectable, Inject, NotFoundException, BadRequestException } from '@nes
 import { eq, desc, and, count, sql, sum, gte, lte } from 'drizzle-orm';
 import { DATABASE_TOKEN } from '../../database/database.module';
 import { Database } from '../../database/connection';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as schema from '../../database/schema';
 
 @Injectable()
 export class CashClosingsService {
-  constructor(@Inject(DATABASE_TOKEN) private db: Database) {}
+  constructor(
+    @Inject(DATABASE_TOKEN) private db: Database,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(data: { warehouseId: string; date: string; notes?: string }, userId: string) {
     const targetDate = new Date(data.date);
@@ -78,6 +82,19 @@ export class CashClosingsService {
         notes: data.notes,
       })
       .returning();
+
+    // Notificar cierre de caja a admins
+    await this.notificationsService.notifyAdmins(
+      'CIERRE_CAJA',
+      'Cierre de caja realizado',
+      `Cierre de caja por RD$${saleSummary.totalSales} (Efectivo: RD$${saleSummary.totalCash}, Crédito: RD$${saleSummary.totalCredit})`,
+      {
+        closingId: closing.id,
+        totalSales: saleSummary.totalSales,
+        totalCash: saleSummary.totalCash,
+        totalCredit: saleSummary.totalCredit,
+      },
+    );
 
     return closing;
   }

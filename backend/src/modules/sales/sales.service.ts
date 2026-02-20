@@ -3,6 +3,7 @@ import { eq, desc, and, count, sql, sum, gte, lte, between } from 'drizzle-orm';
 import { DATABASE_TOKEN } from '../../database/database.module';
 import { Database } from '../../database/connection';
 import { WarehousesService } from '../warehouses/warehouses.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as schema from '../../database/schema';
 
 interface CreateSaleDto {
@@ -19,6 +20,7 @@ export class SalesService {
   constructor(
     @Inject(DATABASE_TOKEN) private db: Database,
     private warehousesService: WarehousesService,
+    private notificationsService: NotificationsService,
   ) {}
 
   private async generateSaleNumber(): Promise<string> {
@@ -137,6 +139,63 @@ export class SalesService {
         .where(eq(schema.customers.id, data.customerId));
     }
 
+    // Notificaciones
+    // Notificar nueva venta a admins
+    await this.notificationsService.notifyAdmins(
+      'NUEVA_VENTA',
+      `Nueva venta ${saleNumber}`,
+      `Venta ${data.type} por RD$${total.toFixed(2)} registrada`,
+      { saleId: sale.id, saleNumber, total: total.toFixed(2), type: data.type },
+    );
+
+    // Verificar stock bajo después de la venta
+    for (const item of data.items) {
+      const [stockRecord] = await this.db
+        .select({
+          quantity: schema.warehouseStock.quantity,
+          productName: schema.products.name,
+          minStock: schema.products.minStock,
+        })
+        .from(schema.warehouseStock)
+        .innerJoin(schema.products, eq(schema.warehouseStock.productId, schema.products.id))
+        .where(
+          and(
+            eq(schema.warehouseStock.warehouseId, data.warehouseId),
+            eq(schema.warehouseStock.productId, item.productId),
+          ),
+        )
+        .limit(1);
+
+      if (stockRecord && stockRecord.quantity <= stockRecord.minStock) {
+        const notifType = stockRecord.quantity === 0 ? 'STOCK_AGOTADO' : 'STOCK_BAJO';
+        const title = stockRecord.quantity === 0
+          ? `¡Producto agotado!`
+          : `Stock bajo: ${stockRecord.productName}`;
+        const message = stockRecord.quantity === 0
+          ? `${stockRecord.productName} se ha agotado en el almacén`
+          : `${stockRecord.productName} tiene solo ${stockRecord.quantity} unidades (mín: ${stockRecord.minStock})`;
+
+        await this.notificationsService.notifyAdmins(notifType, title, message, {
+          productId: item.productId,
+          currentStock: stockRecord.quantity,
+          minStock: stockRecord.minStock,
+        });
+
+        // También notificar a almaceneros
+        await this.notificationsService.create({
+          type: notifType,
+          title,
+          message,
+          targetRole: 'ALMACENERO',
+          metadata: {
+            productId: item.productId,
+            currentStock: stockRecord.quantity,
+            minStock: stockRecord.minStock,
+          },
+        });
+      }
+    }
+
     return { ...sale, items: saleItemsData };
   }
 
@@ -252,6 +311,14 @@ export class SalesService {
       .update(schema.sales)
       .set({ status: 'CANCELADA' })
       .where(eq(schema.sales.id, id));
+
+    // Notificar cancelación
+    await this.notificationsService.notifyAdmins(
+      'VENTA_CANCELADA',
+      `Venta ${sale.saleNumber} cancelada`,
+      `La venta ${sale.saleNumber} por RD$${sale.total} ha sido cancelada`,
+      { saleId: id, saleNumber: sale.saleNumber, total: sale.total },
+    );
 
     // If credit sale, reverse account receivable
     if (sale.type === 'CREDITO' && sale.customerId) {

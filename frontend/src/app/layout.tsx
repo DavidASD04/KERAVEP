@@ -13,11 +13,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
           rel="stylesheet"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('keravep_theme');
+                if (theme === 'dark') document.documentElement.classList.add('dark');
+              } catch(e) {}
+            `,
+          }}
         />
       </head>
       <body>
@@ -28,9 +38,10 @@ export default function RootLayout({
             duration: 3000,
             style: {
               borderRadius: '12px',
-              background: '#0f172a',
-              color: '#fff',
+              background: '#1a1a2e',
+              color: '#f0e6d3',
               fontSize: '0.875rem',
+              border: '1px solid rgba(212, 160, 60, 0.2)',
             },
           }}
         />

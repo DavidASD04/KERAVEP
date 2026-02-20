@@ -2,11 +2,15 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { eq, desc, ilike, or, and, count, sql } from 'drizzle-orm';
 import { DATABASE_TOKEN } from '../../database/database.module';
 import { Database } from '../../database/connection';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as schema from '../../database/schema';
 
 @Injectable()
 export class CustomersService {
-  constructor(@Inject(DATABASE_TOKEN) private db: Database) {}
+  constructor(
+    @Inject(DATABASE_TOKEN) private db: Database,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async findAll(query?: { search?: string; page?: number; limit?: number; active?: string }) {
     const page = query?.page || 1;
@@ -57,6 +61,15 @@ export class CustomersService {
 
   async create(data: any) {
     const [customer] = await this.db.insert(schema.customers).values(data).returning();
+
+    // Notificar nuevo cliente
+    await this.notificationsService.notifyAdmins(
+      'NUEVO_CLIENTE',
+      'Nuevo cliente registrado',
+      `Se registró el cliente ${customer.firstName} ${customer.lastName}`,
+      { customerId: customer.id, name: `${customer.firstName} ${customer.lastName}` },
+    );
+
     return customer;
   }
 

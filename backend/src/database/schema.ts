@@ -201,10 +201,44 @@ export const cashClosings = pgTable('cash_closings', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ============ NOTIFICATION TYPES ============
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'STOCK_BAJO',
+  'STOCK_AGOTADO',
+  'NUEVA_VENTA',
+  'VENTA_CANCELADA',
+  'NUEVO_CLIENTE',
+  'PAGO_RECIBIDO',
+  'CUENTA_VENCIDA',
+  'CIERRE_CAJA',
+  'SESION_CERRADA',
+  'USUARIO_DESACTIVADO',
+  'TRANSFERENCIA',
+  'SISTEMA',
+]);
+
+// ============ NOTIFICATIONS ============
+export const notifications = pgTable('notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: notificationTypeEnum('type').notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  message: text('message').notNull(),
+  userId: uuid('user_id').references(() => users.id),
+  targetRole: userRoleEnum('target_role'),
+  isRead: boolean('is_read').notNull().default(false),
+  metadata: text('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ============ RELATIONS ============
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   sales: many(sales),
   warehouses: many(warehouses),
+  notifications: many(notifications),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({

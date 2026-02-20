@@ -2,11 +2,15 @@ import { Injectable, Inject, NotFoundException, BadRequestException } from '@nes
 import { eq, desc, and, count, sql, sum, or, gte, lte } from 'drizzle-orm';
 import { DATABASE_TOKEN } from '../../database/database.module';
 import { Database } from '../../database/connection';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as schema from '../../database/schema';
 
 @Injectable()
 export class AccountsReceivableService {
-  constructor(@Inject(DATABASE_TOKEN) private db: Database) {}
+  constructor(
+    @Inject(DATABASE_TOKEN) private db: Database,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async findAll(query?: { page?: number; limit?: number; status?: string; customerId?: string }) {
     const page = query?.page || 1;
@@ -137,6 +141,14 @@ export class AccountsReceivableService {
         updatedAt: new Date(),
       })
       .where(eq(schema.customers.id, account.customerId));
+
+    // Notificar pago recibido
+    await this.notificationsService.notifyAdmins(
+      'PAGO_RECIBIDO',
+      'Pago recibido',
+      `Se recibió un pago de RD$${amount.toFixed(2)} para la cuenta de ${account.customerName} (Venta ${account.saleNumber})`,
+      { accountId, amount: amount.toFixed(2), newBalance: newBalance.toFixed(2), newStatus },
+    );
 
     return { payment, newBalance: newBalance.toFixed(2), newStatus };
   }

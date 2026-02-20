@@ -56,8 +56,28 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  logout: (token: string) =>
+    fetchApi<{ message: string }>('/auth/logout', { method: 'POST', token }),
   getProfile: (token: string) =>
     fetchApi<User>('/auth/profile', { token }),
+  updateProfile: (token: string, data: { firstName?: string; lastName?: string; phone?: string; currentPassword?: string; newPassword?: string }) =>
+    fetchApi<User>('/auth/profile', { method: 'PATCH', body: JSON.stringify(data), token }),
+};
+
+// Notifications
+export const notificationsApi = {
+  getAll: (token: string, params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchApi<PaginatedResponse<Notification>>(`/notifications${qs}`, { token });
+  },
+  getUnreadCount: (token: string) =>
+    fetchApi<{ count: number }>('/notifications/unread-count', { token }),
+  markAsRead: (token: string, id: string) =>
+    fetchApi<Notification>(`/notifications/${id}/read`, { method: 'PATCH', token }),
+  markAllAsRead: (token: string) =>
+    fetchApi<{ message: string }>('/notifications/read-all', { method: 'PATCH', token }),
+  delete: (token: string, id: string) =>
+    fetchApi<{ message: string }>(`/notifications/${id}`, { method: 'DELETE', token }),
 };
 
 // Dashboard
@@ -476,4 +496,30 @@ export interface CashClosingDetail extends CashClosing {
     customerName: string;
     createdAt: string;
   }[];
+}
+
+export type NotificationType =
+  | 'STOCK_BAJO'
+  | 'STOCK_AGOTADO'
+  | 'NUEVA_VENTA'
+  | 'VENTA_CANCELADA'
+  | 'NUEVO_CLIENTE'
+  | 'PAGO_RECIBIDO'
+  | 'CUENTA_VENCIDA'
+  | 'CIERRE_CAJA'
+  | 'SESION_CERRADA'
+  | 'USUARIO_DESACTIVADO'
+  | 'TRANSFERENCIA'
+  | 'SISTEMA';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  userId?: string;
+  targetRole?: string;
+  isRead: boolean;
+  metadata?: Record<string, any>;
+  createdAt: string;
 }

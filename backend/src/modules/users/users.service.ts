@@ -2,11 +2,15 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { eq, desc, ilike, or, and, count, sql, sum, gte } from 'drizzle-orm';
 import { DATABASE_TOKEN } from '../../database/database.module';
 import { Database } from '../../database/connection';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as schema from '../../database/schema';
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(DATABASE_TOKEN) private db: Database) {}
+  constructor(
+    @Inject(DATABASE_TOKEN) private db: Database,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async findAll(query?: { search?: string; role?: string; page?: number; limit?: number }) {
     const page = query?.page || 1;
@@ -88,7 +92,19 @@ export class UsersService {
 
   async toggleActive(id: string) {
     const existing = await this.findOne(id);
-    return this.update(id, { isActive: !existing.isActive });
+    const result = await this.update(id, { isActive: !existing.isActive });
+
+    if (!existing.isActive === false) {
+      // Se está desactivando
+      await this.notificationsService.notifyAdmins(
+        'USUARIO_DESACTIVADO',
+        'Usuario desactivado',
+        `El usuario ${existing.firstName} ${existing.lastName} ha sido desactivado`,
+        { userId: id },
+      );
+    }
+
+    return result;
   }
 
   // === Seller Zone/Route Management ===
