@@ -296,6 +296,7 @@ export default function VentasPage() {
   };
 
   return (
+    <>
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -417,15 +418,16 @@ export default function VentasPage() {
           </div>
         )}
       </div>
+    </div>
 
       {/* New Sale Modal (POS) */}
       {showNewSale && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 bg-black/40 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-5xl glass-card animate-fade-in">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm p-4 lg:p-6">
+          <div className="w-full max-w-5xl h-full mx-auto flex flex-col glass-card rounded-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)] shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shrink-0">
                   <Receipt className="text-white" size={18} />
                 </div>
                 <div>
@@ -433,16 +435,16 @@ export default function VentasPage() {
                   <p className="text-xs text-gray-400">Punto de venta</p>
                 </div>
               </div>
-              <button onClick={() => { setShowNewSale(false); setCart([]); }} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => { setShowNewSale(false); setCart([]); }} className="text-gray-400 hover:text-gray-600 shrink-0">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="flex flex-col lg:flex-row">
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
               {/* Left: Product selection */}
-              <div className="flex-1 p-5 border-b lg:border-b-0 lg:border-r border-[var(--color-border)]">
+              <div className="flex-1 flex flex-col min-h-0 p-5 border-b lg:border-b-0 lg:border-r border-[var(--color-border)]">
                 {/* Sale config */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 shrink-0">
                   <div className="relative">
                     <label className="text-xs font-medium text-gray-600 mb-1 block">Cliente *</label>
                     <div className="relative">
@@ -527,7 +529,7 @@ export default function VentasPage() {
                 </div>
 
                 {/* Product search */}
-                <div className="relative mb-3">
+                <div className="relative mb-3 shrink-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                   <input
                     type="text"
@@ -539,7 +541,7 @@ export default function VentasPage() {
                 </div>
 
                 {/* Product grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[300px] overflow-y-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 flex-1 overflow-y-auto content-start">
                   {filteredProducts.map(product => {
                     const stock = stockMap[product.id] || 0;
                     const inCart = cart.find(c => c.productId === product.id);
@@ -570,15 +572,15 @@ export default function VentasPage() {
               </div>
 
               {/* Right: Cart */}
-              <div className="w-full lg:w-[340px] flex flex-col">
-                <div className="p-4 border-b border-[var(--color-border)]">
+              <div className="w-full lg:w-[340px] flex flex-col min-h-0 shrink-0">
+                <div className="p-4 border-b border-[var(--color-border)] shrink-0">
                   <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                     <ShoppingCart size={14} />
                     Carrito ({cart.length})
                   </h3>
                 </div>
 
-                <div className="flex-1 p-4 overflow-y-auto max-h-[350px] space-y-2">
+                <div className="flex-1 p-4 overflow-y-auto space-y-2">
                   {cart.length === 0 ? (
                     <p className="text-center text-sm text-gray-400 py-8">Carrito vacío</p>
                   ) : (
@@ -619,7 +621,7 @@ export default function VentasPage() {
                 </div>
 
                 {/* Total and submit */}
-                <div className="p-4 border-t border-[var(--color-border)] bg-gray-50/50">
+                <div className="p-4 border-t border-[var(--color-border)] bg-gray-50/50 shrink-0">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm font-medium text-gray-600">Total</span>
                     <span className="text-xl font-bold text-gray-900">{formatCurrency(cartTotal)}</span>
@@ -838,6 +840,6 @@ export default function VentasPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
