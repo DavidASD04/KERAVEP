@@ -62,7 +62,7 @@ export default function AlmacenPage() {
         warehousesApi.getMovements(token, selectedWarehouse),
       ]);
       setStock(s);
-      setMovements(m);
+      setMovements(Array.isArray(m) ? m : (m as { data: StockMovement[] }).data || []);
     } catch { /* ignore */ }
     setLoading(false);
   };
