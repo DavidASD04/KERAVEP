@@ -43,13 +43,22 @@ export default function CuentasPage() {
       const params: Record<string, string> = { page: String(page), limit: '15' };
       if (search) params.search = search;
       if (filterStatus) params.status = filterStatus;
-      const [res, aging] = await Promise.all([
+      const [res, agingRaw] = await Promise.all([
         accountsApi.getAll(token, params),
         accountsApi.getAgingReport(token),
       ]);
       setAccounts(res.data);
       setTotal(res.total);
-      setAgingReport(aging);
+      // Backend returns { summary: { current, '1-30', '31-60', '61-90', '90+', totalPending }, accounts }
+      const s = (agingRaw as unknown as { summary: Record<string, unknown> }).summary ?? agingRaw;
+      setAgingReport({
+        totalPending: s.totalPending as string,
+        current: s.current as AgingReport['current'],
+        days1to30: (s['1-30'] ?? s.days1to30) as AgingReport['days1to30'],
+        days31to60: (s['31-60'] ?? s.days31to60) as AgingReport['days31to60'],
+        days61to90: (s['61-90'] ?? s.days61to90) as AgingReport['days61to90'],
+        over90: (s['90+'] ?? s.over90) as AgingReport['over90'],
+      });
     } catch { /* ignore */ }
     setLoading(false);
   };
