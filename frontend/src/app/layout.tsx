@@ -5,6 +5,9 @@ import { Toaster } from 'react-hot-toast';
 export const metadata: Metadata = {
   title: 'KERAVEP - Sistema de Gestión',
   description: 'Sistema de gestión empresarial para productos capilares',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
